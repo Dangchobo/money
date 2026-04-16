@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-<title>💰 가계부</title>
+<title>💰</title>
 <link href="https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght@300;500;700&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 :root{--bg:#f7f5f0;--surf:#fff;--border:#e8e4dc;--bh:#cfc8bb;--txt:#1a1714;--txt2:#6b6560;--txt3:#aaa49c;--acc:#2d2a26;--red:#c0392b;--grn:#0f6e56;--r:10px;--rs:6px}
@@ -359,7 +359,7 @@ let S={
   budgets:{약속:451000,식사:61000,카페:71000,식재료:80000,생필품:100000,패션:250000,미용:10000,여가:310000,기타:118400,병원:30000,선물:0},
   totalBudget:1481400,
   fixedItems:[{name:'월세+관리비',amt:670000},{name:'교통비',amt:55000},{name:'보험료',amt:95000},{name:'구독비',amt:30000},{name:'경조사비',amt:100000},{name:'청약저축',amt:100000},{name:'적금',amt:500000},{name:'퇴직펀드',amt:400000},{name:'S&P(개인연금)',amt:300000}],
-  monthlyGoals:{},monthlyIncome:{},
+  monthlyGoals:{},monthlyIncome:{},monthlyIncomeItems:{},
   assets:[{name:'주식',val:2400000},{name:'ETF',val:570000},{name:'청약저축',val:880000},{name:'적금',val:3600000},{name:'CMA',val:500000}],
 };
 
@@ -682,9 +682,10 @@ function rG(){
     const c=document.createElement('div');
     c.className='mg-card'+(tamt>0?' has':'')+(isThisMonth?' this-month':'');
     const income=S.monthlyIncome[k]||0;
+    const incomeItems=S.monthlyIncomeItems&&S.monthlyIncomeItems[k]||[];
     const savRate=income>0?Math.round(aamt/income*100):null;
     c.innerHTML='<div class="mg-month">'+(m+1)+'월</div>'
-      +'<div class="mg-row"><div><div class="mg-item-lbl">수입</div><div class="mg-item-val" style="color:#185FA5">'+(income?fmtS(income):'—')+'</div></div>'
+      +'<div class="mg-row"><div><div class="mg-item-lbl">수입</div><div class="mg-item-val" style="color:#185FA5">'+(income?fmtS(income):'—')+(incomeItems.length>1?'<span style="font-size:8px;color:#185FA5;opacity:.7"> ('+incomeItems.length+'항목)</span>':'')+'</div></div>'
       +'<div><div class="mg-item-lbl">저축률</div><div class="mg-item-val">'+(savRate!=null?savRate+'%':'—')+'</div></div></div>'
       +'<div class="mg-row" style="margin-top:3px"><div><div class="mg-item-lbl">목표저축</div><div class="mg-item-val">'+(tamt>0?fmtS(tamt):'—')+'</div></div>'
       +'<div><div class="mg-item-lbl">실제저축</div><div class="mg-item-val actual">'+(aamt>0?fmtS(aamt):'—')+'</div></div></div>'
@@ -919,13 +920,48 @@ function oMGoal(y,m){
   cm();const bd=document.createElement('div');bd.className='modal-backdrop';bd.id='mwrap';bd.onclick=e=>{if(e.target===bd)cm();};
   const modal=document.createElement('div');modal.className='modal';
   const h3=document.createElement('h3');h3.textContent=(m+1)+'월 수입 / 저축';modal.appendChild(h3);
-  // 수입 섹션
+  // 수입 항목 섹션
+  if(!S.monthlyIncomeItems[k])S.monthlyIncomeItems[k]=[];
+  const incItems=S.monthlyIncomeItems[k];
   const incWrap=document.createElement('div');incWrap.style.marginBottom='.1rem';
   const incLbl=document.createElement('div');incLbl.className='slbl';incLbl.textContent='이번 달 수입';incWrap.appendChild(incLbl);
-  const incInp=document.createElement('input');incInp.type='text';incInp.placeholder='수입 금액';
-  const curIncome=S.monthlyIncome[k]||0;
-  incInp.value=curIncome?curIncome.toLocaleString():'';
-  incWrap.appendChild(incInp);modal.appendChild(incWrap);
+  // 수입 항목 리스트
+  const incList=document.createElement('div');
+  const incTotalRow=document.createElement('div');
+  incTotalRow.style.cssText='display:flex;justify-content:space-between;padding:.35rem .5rem;font-size:11px;font-weight:500;background:var(--bg);border-radius:var(--rs);margin-top:4px';
+  const renderIncList=()=>{
+    incList.innerHTML='';
+    incItems.forEach((x,i)=>{
+      const d2=document.createElement('div');d2.className='ev-item';d2.style.background='#e6f1fb';
+      d2.innerHTML='<span style="font-weight:500;color:#0c447c;flex:1">'+x.name+'</span><span style="font-weight:500;color:#185FA5">'+fmt(x.amt)+'</span>';
+      const del=document.createElement('button');del.className='ev-del';del.textContent='×';
+      del.onclick=()=>{incItems.splice(i,1);renderIncList();};
+      d2.appendChild(del);incList.appendChild(d2);
+    });
+    const tot=incItems.reduce((s,x)=>s+x.amt,0);
+    incTotalRow.style.display=incItems.length?'flex':'none';
+    incTotalRow.innerHTML='<span style="color:var(--txt2)">수입 합계</span><span style="color:#185FA5">'+fmt(tot)+'</span>';
+  };
+  renderIncList();
+  incWrap.appendChild(incList);
+  incWrap.appendChild(incTotalRow);
+  // 항목 추가 행
+  const addRow=document.createElement('div');addRow.style.cssText='display:flex;gap:5px;margin-top:.4rem';
+  const incNameInp=document.createElement('input');incNameInp.type='text';incNameInp.placeholder='항목 (예: 월급)';incNameInp.style.cssText='flex:1.2;font-size:13px';
+  const incAmtInp=document.createElement('input');incAmtInp.type='text';incAmtInp.placeholder='금액';incAmtInp.style.cssText='flex:1;font-size:13px';incAmtInp.setAttribute('inputmode','numeric');
+  const incAddBtn=document.createElement('button');incAddBtn.className='mbtn primary';incAddBtn.style.cssText='flex-shrink:0;font-size:12px';incAddBtn.textContent='추가';
+  incAddBtn.onclick=()=>{
+    const name=incNameInp.value.trim();const amt=parseCur(incAmtInp.value);
+    if(!name||!amt)return;
+    incItems.push({name,amt});incNameInp.value='';incAmtInp.value='';incNameInp.focus();
+    renderIncList();
+  };
+  incAmtInp.addEventListener('keydown',e=>{if(e.key==='Enter')incAddBtn.click();});
+  addRow.appendChild(incNameInp);addRow.appendChild(incAmtInp);addRow.appendChild(incAddBtn);
+  incWrap.appendChild(addRow);
+  modal.appendChild(incWrap);
+  // incInp 호환성 (저장 시 합계 사용)
+  const incInp={value:''};
   // 현재금액 섹션
   const curWrap=document.createElement('div');curWrap.className='sgap';
   const curLbl=document.createElement('div');curLbl.className='slbl';curLbl.textContent='현재 금액';curWrap.appendChild(curLbl);
@@ -977,8 +1013,8 @@ function oMGoal(y,m){
     }
     return wrap;
   };
-  modal.appendChild(mkSection(g.target,'🎯 목표 저축','#edfaf4','#056b47'));
-  modal.appendChild(mkSection(g.actual,'✅ 실제 저축','#e6f1fb','#0c447c'));
+  modal.appendChild(mkSection(g.target,'🎯 목표','#edfaf4','#056b47'));
+  modal.appendChild(mkSection(g.actual,'✅ 달성','#e6f1fb','#0c447c'));
   const updateProj=()=>{
     const pv=document.getElementById('proj-val-'+m);if(!pv)return;
     const cur=parseCur(curInp.value)||(autoCurrent||0);
@@ -990,7 +1026,10 @@ function oMGoal(y,m){
   const footer=document.createElement('div');footer.className='mfooter';
   const cb=document.createElement('button');cb.className='mbtn';cb.textContent='저장 후 닫기';
   cb.onclick=()=>{
-    const incV=parseCur(incInp.value);if(incV)S.monthlyIncome[k]=incV;else delete S.monthlyIncome[k];
+    // 수입 항목 저장
+    S.monthlyIncomeItems[k]=incItems;
+    const incTot=incItems.reduce((s,x)=>s+x.amt,0);
+    if(incTot)S.monthlyIncome[k]=incTot;else delete S.monthlyIncome[k];
     const v=parseCur(curInp.value);g.current=v||null;
     persist();rG();cm();
   };
