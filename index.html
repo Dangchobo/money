@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-<title>💰 가계부</title>
+<title>💸</title>
 <link href="https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght@300;500;700&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 :root{--bg:#f7f5f0;--surf:#fff;--border:#e8e4dc;--bh:#cfc8bb;--txt:#1a1714;--txt2:#6b6560;--txt3:#aaa49c;--acc:#2d2a26;--red:#c0392b;--grn:#0f6e56;--r:10px;--rs:6px}
@@ -992,7 +992,13 @@ function rB(){
   });
   const mBudgets=getBudgets();
   const catUsed={};VCATS.forEach(c=>catUsed[c]=0);
-  Object.values(S.dayBudgets||{}).forEach(dd=>{(dd.budgets||[]).forEach(b=>{const mapped=b.cat==='점심'||b.cat==='저녁'?'식사':b.cat;if(mapped in catUsed)catUsed[mapped]+=b.amt;});});
+  // 해당 월 dayBudgets만 합산
+  Object.entries(S.dayBudgets||{}).forEach(([k,dd])=>{
+    const[ky,km]=k.split('-').map(Number);
+    if(ky===y&&km===mo+1){
+      (dd.budgets||[]).forEach(b=>{const mapped=b.cat==='점심'||b.cat==='저녁'?'식사':b.cat;if(mapped in catUsed)catUsed[mapped]+=b.amt;});
+    }
+  });
   const cr=document.getElementById('b-cat-rows');cr.innerHTML='';let ctot=0,cused=0;
   VCATS.forEach(cat=>{const b=mBudgets[cat]||0,u=catUsed[cat]||0,l=b-u,p=b>0?Math.round(u/b*100):0;const c=CC[cat]||{br:'#888'};ctot+=b;cused+=u;cr.innerHTML+='<div class="cat-brow"><div><div style="display:flex;align-items:center;gap:3px;font-weight:500"><span style="width:5px;height:5px;border-radius:50%;background:'+c.br+';display:inline-block;flex-shrink:0"></span>'+cat+'</div><div style="height:3px;background:var(--bg);border-radius:2px;overflow:hidden;margin-top:2px"><div style="height:100%;width:'+Math.min(p,100)+'%;background:'+c.br+'"></div></div></div><span style="text-align:right;color:var(--txt2)">'+fmt(u)+'</span><span style="text-align:right;font-weight:500;color:'+(l<0?'#c0392b':'#0f6e56')+'">'+(l<0?'-':'+')+fmt(Math.abs(l))+'</span></div>';});
   document.getElementById('b-cat-total').innerHTML='<span style="color:var(--txt2);font-weight:400">'+fmt(cused)+'</span> / '+fmt(ctot);
