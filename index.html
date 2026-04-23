@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-<title>💸</title>
+<title>💰 가계부</title>
 <link href="https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght@300;500;700&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 :root{--bg:#f7f5f0;--surf:#fff;--border:#e8e4dc;--bh:#cfc8bb;--txt:#1a1714;--txt2:#6b6560;--txt3:#aaa49c;--acc:#2d2a26;--red:#c0392b;--grn:#0f6e56;--r:10px;--rs:6px}
@@ -252,7 +252,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
   <div class="screen" id="sc-budget">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;flex-wrap:wrap;gap:8px">
       <div class="month-nav"><button class="navbtn" id="bprev">&#8249;</button><span class="mlbl" id="bmlbl"></span><button class="navbtn" id="bnext">&#8250;</button></div>
-      <button class="mbtn sm primary" onclick="openBudgetSet()">예산 수정</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="mbtn sm" id="b-copy-btn" onclick="copyPrevBudget()">전월 복사</button>
+        <button class="mbtn sm primary" onclick="openBudgetSet()">예산 수정</button>
+      </div>
     </div>
     <div class="budget-outer">
       <div><div class="b-dhd" id="b-dhd"></div><div class="b-cgrid" id="b-cgrid"></div></div>
@@ -435,6 +438,7 @@ let S={
   travelBudgets:{},
   shopItems:{},
   shopBudgets:{},
+  monthlyBudgets:{},
 };
 
 function persist(){
@@ -868,9 +872,12 @@ function getSpent(cur,cats){
 function rL(){
   const y=lcur.getFullYear(),mo=lcur.getMonth();
   document.getElementById('lmlbl').textContent=y+'년 '+(mo+1)+'월';
-  const sp=getSpent(lcur,VCATS),lft=S.totalBudget-sp,pct=S.totalBudget>0?Math.round(sp/S.totalBudget*100):0;
+  const lMk=lcur.getFullYear()+'-'+String(lcur.getMonth()+1).padStart(2,'0');
+  const lBudgets=S.monthlyBudgets[lMk]||S.budgets||{};
+  const lTotalBudget=Object.values(lBudgets).reduce((s,v)=>s+v,0)||S.totalBudget||0;
+  const sp=getSpent(lcur,VCATS),lft=lTotalBudget-sp,pct=lTotalBudget>0?Math.round(sp/lTotalBudget*100):0;
   document.getElementById('l-spent').textContent=fmt(sp);
-  document.getElementById('l-budget').textContent=fmt(S.totalBudget);
+  document.getElementById('l-budget').textContent=fmt(lTotalBudget);
   const lel=document.getElementById('l-left');lel.textContent=(lft<0?'-':'')+fmt(Math.abs(lft));lel.className='sc-val '+(lft<0?'red':'grn');
   document.getElementById('l-pct').textContent=pct+'%';
   const lf=document.getElementById('l-fill');lf.style.width=Math.min(pct,100)+'%';lf.style.background=pct>90?'#c0392b':pct>70?'#e8940a':'#0f6e56';
@@ -884,7 +891,7 @@ function rL(){
     if(cat==='선물'){
       d.innerHTML='<div><div class="brn"><span class="brd" style="background:'+cc2.br+'"></span>'+cat+'</div><div class="gift-note">예산 제외 항목</div></div><div class="brr"><div style="font-size:10px;font-weight:500;color:'+cc2.br+'">'+fmt(u)+'</div><div class="brsub">사용액</div></div>';
     } else {
-      const b=S.budgets[cat]||0,l2=b-u,p=b>0?Math.round(u/b*100):u>0?100:0;
+      const b=lBudgets[cat]||0,l2=b-u,p=b>0?Math.round(u/b*100):u>0?100:0;
       d.innerHTML='<div><div class="brn"><span class="brd" style="background:'+cc2.br+'"></span>'+cat+'</div><div class="minitrk"><div class="minifill" style="width:'+Math.min(p,100)+'%;background:'+cc2.br+'"></div></div></div><div class="brr"><div class="brl '+(l2<0?'red':'grn')+'">'+(l2<0?'-':'+')+fmt(Math.abs(l2))+'</div><div class="brsub2">'+fmt(u)+'</div><div class="brsub">/ '+fmt(b)+'</div></div>';
       if(u>0)usedCats.push({cat,u,br:cc2.br});
     }
@@ -942,9 +949,26 @@ function buildLedgerCal(y,mo){
 }
 
 /* ══ 예산 ══ */
+function getBudgets(){
+  const mk=bcur.getFullYear()+'-'+String(bcur.getMonth()+1).padStart(2,'0');
+  // 월별 예산 있으면 우선, 없으면 전역 S.budgets 사용
+  return S.monthlyBudgets[mk]||S.budgets||{};
+}
+function getTotalBudget(){
+  const mk=bcur.getFullYear()+'-'+String(bcur.getMonth()+1).padStart(2,'0');
+  if(S.monthlyBudgets[mk]){
+    return Object.values(S.monthlyBudgets[mk]).reduce((s,v)=>s+v,0);
+  }
+  return S.totalBudget||0;
+}
 function rB(){
   const y=bcur.getFullYear(),mo=bcur.getMonth();
   document.getElementById('bmlbl').textContent=y+'년 '+(mo+1)+'월';
+  // 전월 복사 버튼 상태
+  const mk=y+'-'+String(mo+1).padStart(2,'0');
+  const hasMine=!!S.monthlyBudgets[mk];
+  const copyBtn=document.getElementById('b-copy-btn');
+  if(copyBtn)copyBtn.textContent=hasMine?'전월 복사':'전월 복사 (전역 예산 중)';
   document.getElementById('b-dhd').innerHTML=['월','화','수','목','금','토','일'].map(d=>'<div class="dh">'+d+'</div>').join('');
   const grid=document.getElementById('b-cgrid');grid.innerHTML='';
   const first=new Date(y,mo,1).getDay(),fmon=first===0?6:first-1,days=new Date(y,mo+1,0).getDate(),pD=new Date(y,mo,0).getDate();
@@ -966,10 +990,11 @@ function rB(){
     const h=document.createElement('span');h.className='hint';h.textContent='+ 등록';div.appendChild(h);
     div.onclick=()=>openDayModal(y,mo,d);grid.appendChild(div);
   });
+  const mBudgets=getBudgets();
   const catUsed={};VCATS.forEach(c=>catUsed[c]=0);
   Object.values(S.dayBudgets||{}).forEach(dd=>{(dd.budgets||[]).forEach(b=>{const mapped=b.cat==='점심'||b.cat==='저녁'?'식사':b.cat;if(mapped in catUsed)catUsed[mapped]+=b.amt;});});
   const cr=document.getElementById('b-cat-rows');cr.innerHTML='';let ctot=0,cused=0;
-  VCATS.forEach(cat=>{const b=S.budgets[cat]||0,u=catUsed[cat]||0,l=b-u,p=b>0?Math.round(u/b*100):0;const c=CC[cat]||{br:'#888'};ctot+=b;cused+=u;cr.innerHTML+='<div class="cat-brow"><div><div style="display:flex;align-items:center;gap:3px;font-weight:500"><span style="width:5px;height:5px;border-radius:50%;background:'+c.br+';display:inline-block;flex-shrink:0"></span>'+cat+'</div><div style="height:3px;background:var(--bg);border-radius:2px;overflow:hidden;margin-top:2px"><div style="height:100%;width:'+Math.min(p,100)+'%;background:'+c.br+'"></div></div></div><span style="text-align:right;color:var(--txt2)">'+fmt(u)+'</span><span style="text-align:right;font-weight:500;color:'+(l<0?'#c0392b':'#0f6e56')+'">'+(l<0?'-':'+')+fmt(Math.abs(l))+'</span></div>';});
+  VCATS.forEach(cat=>{const b=mBudgets[cat]||0,u=catUsed[cat]||0,l=b-u,p=b>0?Math.round(u/b*100):0;const c=CC[cat]||{br:'#888'};ctot+=b;cused+=u;cr.innerHTML+='<div class="cat-brow"><div><div style="display:flex;align-items:center;gap:3px;font-weight:500"><span style="width:5px;height:5px;border-radius:50%;background:'+c.br+';display:inline-block;flex-shrink:0"></span>'+cat+'</div><div style="height:3px;background:var(--bg);border-radius:2px;overflow:hidden;margin-top:2px"><div style="height:100%;width:'+Math.min(p,100)+'%;background:'+c.br+'"></div></div></div><span style="text-align:right;color:var(--txt2)">'+fmt(u)+'</span><span style="text-align:right;font-weight:500;color:'+(l<0?'#c0392b':'#0f6e56')+'">'+(l<0?'-':'+')+fmt(Math.abs(l))+'</span></div>';});
   document.getElementById('b-cat-total').innerHTML='<span style="color:var(--txt2);font-weight:400">'+fmt(cused)+'</span> / '+fmt(ctot);
   const fr=document.getElementById('b-fixed');fr.innerHTML='';let ftot=0;(S.fixedItems||[]).forEach(it=>{ftot+=it.amt;fr.innerHTML+='<div class="frow"><span style="color:var(--txt2)">'+it.name+'</span><span style="font-weight:500">'+fmt(it.amt)+'</span></div>';});document.getElementById('b-fixed-tot').textContent=fmt(ftot);
 }
@@ -1240,24 +1265,47 @@ function oFixedExp(y,mo,d){
 }
 
 function openBudgetSet(){
-  const customCats=Object.keys(S.budgets).filter(k=>!VCATS.includes(k)&&k!=='선물');
+  const mk=bcur.getFullYear()+'-'+String(bcur.getMonth()+1).padStart(2,'0');
+  const mBudgets=S.monthlyBudgets[mk]||{...S.budgets};
+  const customCats=Object.keys(mBudgets).filter(k=>!VCATS.includes(k)&&k!=='선물');
   const allCats=[...VCATS,...customCats];
-  spawn('<h3>예산 수정</h3><div style="margin-bottom:.6rem"><div class="slbl">총 월 예산</div><input type="text" id="b-total" value="'+S.totalBudget.toLocaleString()+'" placeholder="0원"/></div>'+allCats.map(cat=>'<div style="display:flex;align-items:center;gap:6px;margin-bottom:.4rem"><span style="font-size:11px;color:var(--txt2);min-width:52px">'+cat+'</span><input type="text" id="b-cat-'+cat+'" value="'+(S.budgets[cat]||0).toLocaleString()+'" style="flex:1;font-size:12px" placeholder="0원"/></div>').join('')+'<div class="sgap"><div class="slbl">카테고리 직접 추가</div><div style="display:flex;gap:5px"><input type="text" id="b-new-name" placeholder="카테고리명" style="flex:1;font-size:12px"/><input type="text" id="b-new-amt" placeholder="예산액" style="width:80px;font-size:12px"/><button class="mbtn sm primary" onclick="addBudgetCat()">추가</button></div></div><div class="mfooter"><button class="mbtn" onclick="cm()">취소</button><button class="mbtn primary" onclick="sBSet()">저장</button></div>');
+  const mo=bcur.getMonth();
+  const MNAMES=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  spawn('<h3>'+MNAMES[mo]+' 예산 수정</h3>'+allCats.map(cat=>'<div style="display:flex;align-items:center;gap:6px;margin-bottom:.4rem"><span style="font-size:11px;color:var(--txt2);min-width:52px">'+cat+'</span><input type="text" id="b-cat-'+cat+'" value="'+(mBudgets[cat]||0).toLocaleString()+'" style="flex:1;font-size:12px" placeholder="0원"/></div>').join('')+'<div class="sgap"><div class="slbl">카테고리 직접 추가</div><div style="display:flex;gap:5px"><input type="text" id="b-new-name" placeholder="카테고리명" style="flex:1;font-size:12px"/><input type="text" id="b-new-amt" placeholder="예산액" style="width:80px;font-size:12px"/><button class="mbtn sm primary" onclick="addBudgetCat()">추가</button></div></div><div class="mfooter"><button class="mbtn" onclick="cm()">취소</button><button class="mbtn primary" onclick="sBSet()">저장</button></div>');
 }
 window.addBudgetCat=function(){
   const name=document.getElementById('b-new-name')?.value.trim();
   const amt=parseCur(document.getElementById('b-new-amt')?.value);
   if(!name)return;
-  S.budgets[name]=amt||0;
+  const mk=bcur.getFullYear()+'-'+String(bcur.getMonth()+1).padStart(2,'0');
+  if(!S.monthlyBudgets[mk])S.monthlyBudgets[mk]={...S.budgets};
+  S.monthlyBudgets[mk][name]=amt||0;
   cm();openBudgetSet();
 }
 window.openBudgetSet=openBudgetSet;
 window.sBSet=function(){
-  S.totalBudget=parseCur(document.getElementById('b-total').value);
-  const customCats2=Object.keys(S.budgets).filter(k=>!VCATS.includes(k)&&k!=='선물');
+  const mk=bcur.getFullYear()+'-'+String(bcur.getMonth()+1).padStart(2,'0');
+  const mBudgets2=S.monthlyBudgets[mk]||{};
+  const customCats2=Object.keys(mBudgets2).filter(k=>!VCATS.includes(k)&&k!=='선물');
   const allCats2=[...VCATS,...customCats2];
-  allCats2.forEach(cat=>{const el=document.getElementById('b-cat-'+cat);if(el)S.budgets[cat]=parseCur(el.value);});
+  const newB={};
+  allCats2.forEach(cat=>{const el=document.getElementById('b-cat-'+cat);if(el){const v=parseCur(el.value);if(v)newB[cat]=v;}});
+  S.monthlyBudgets[mk]=newB;
+  // totalBudget도 이 달 합계로 업데이트
+  S.totalBudget=Object.values(newB).reduce((s,v)=>s+v,0);
+  // 전역 S.budgets도 동기화 (가계부탭 호환)
+  S.budgets={...S.budgets,...newB};
   persist();cm();renderActive();
+}
+
+window.copyPrevBudget=function(){
+  const prevMo=bcur.getMonth()===0?new Date(bcur.getFullYear()-1,11,1):new Date(bcur.getFullYear(),bcur.getMonth()-1,1);
+  const prevMk=prevMo.getFullYear()+'-'+String(prevMo.getMonth()+1).padStart(2,'0');
+  const curMk=bcur.getFullYear()+'-'+String(bcur.getMonth()+1).padStart(2,'0');
+  const src=S.monthlyBudgets[prevMk]||S.budgets;
+  if(!src||!Object.keys(src).length){showToast2('전월 예산이 없어요');return;}
+  S.monthlyBudgets[curMk]={...src};
+  persist();rB();showToast2('전월 예산 복사됨 ✓');
 }
 
 function openFixedEdit(){
