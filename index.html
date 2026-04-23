@@ -222,14 +222,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
 </head>
 <body>
 <div id="lock-overlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:16px">
-  <div style="font-family:'Gmarket Sans',sans-serif;font-size:26px;font-weight:700;color:var(--acc)">💰 가계부</div>
+  <div style="font-family:'Gmarket Sans',sans-serif;font-size:26px;font-weight:700;color:var(--acc)">💸</div>
   <div style="font-size:13px;color:var(--txt3);margin-bottom:4px">비밀번호를 입력하세요</div>
   <input id="lock-input" type="password" placeholder="비밀번호" style="width:200px;font-size:16px;padding:12px 16px;border:1px solid var(--border);border-radius:var(--r);background:var(--surf);color:var(--txt);text-align:center;outline:none;font-family:'Noto Sans KR',sans-serif" onkeydown="if(event.key==='Enter')tryUnlock()"/>
   <button onclick="tryUnlock()" style="width:200px;padding:12px;background:var(--acc);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-family:'Noto Sans KR',sans-serif;cursor:pointer">입력</button>
 </div>
 <div class="app-wrap">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-    <div class="app-title" style="margin-bottom:0">💰 가계부</div>
+    <div class="app-title" style="margin-bottom:0">💸</div>
     <button onclick="openPwSet()" style="background:none;border:1px solid var(--border);border-radius:var(--rs);padding:4px 10px;font-size:11px;color:var(--txt3);cursor:pointer;font-family:'Noto Sans KR',sans-serif">🔒 비번설정</button>
   </div>
 
@@ -873,6 +873,7 @@ function rL(){
   const y=lcur.getFullYear(),mo=lcur.getMonth();
   document.getElementById('lmlbl').textContent=y+'년 '+(mo+1)+'월';
   const lMk=lcur.getFullYear()+'-'+String(lcur.getMonth()+1).padStart(2,'0');
+  // 해당 달 월별예산 → 없으면 가장 최근 설정된 월별예산 → 없으면 전역
   const lBudgets=S.monthlyBudgets[lMk]||S.budgets||{};
   const lTotalBudget=Object.values(lBudgets).reduce((s,v)=>s+v,0)||S.totalBudget||0;
   const sp=getSpent(lcur,VCATS),lft=lTotalBudget-sp,pct=lTotalBudget>0?Math.round(sp/lTotalBudget*100):0;
@@ -951,15 +952,7 @@ function buildLedgerCal(y,mo){
 /* ══ 예산 ══ */
 function getBudgets(){
   const mk=bcur.getFullYear()+'-'+String(bcur.getMonth()+1).padStart(2,'0');
-  // 월별 예산 있으면 우선, 없으면 전역 S.budgets 사용
   return S.monthlyBudgets[mk]||S.budgets||{};
-}
-function getTotalBudget(){
-  const mk=bcur.getFullYear()+'-'+String(bcur.getMonth()+1).padStart(2,'0');
-  if(S.monthlyBudgets[mk]){
-    return Object.values(S.monthlyBudgets[mk]).reduce((s,v)=>s+v,0);
-  }
-  return S.totalBudget||0;
 }
 function rB(){
   const y=bcur.getFullYear(),mo=bcur.getMonth();
@@ -1297,10 +1290,6 @@ window.sBSet=function(){
   const newB={};
   allCats2.forEach(cat=>{const el=document.getElementById('b-cat-'+cat);if(el){const v=parseCur(el.value);if(v)newB[cat]=v;}});
   S.monthlyBudgets[mk]=newB;
-  // totalBudget도 이 달 합계로 업데이트
-  S.totalBudget=Object.values(newB).reduce((s,v)=>s+v,0);
-  // 전역 S.budgets도 동기화 (가계부탭 호환)
-  S.budgets={...S.budgets,...newB};
   persist();cm();renderActive();
 }
 
