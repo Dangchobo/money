@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-<title>💸</title>
+<title>💰 가계부</title>
 <link href="https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght@300;500;700&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 :root{--bg:#f7f5f0;--surf:#fff;--border:#e8e4dc;--bh:#cfc8bb;--txt:#1a1714;--txt2:#6b6560;--txt3:#aaa49c;--acc:#2d2a26;--red:#c0392b;--grn:#0f6e56;--r:10px;--rs:6px}
@@ -210,6 +211,30 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
 .epick.sel{border:1.5px solid var(--acc);background:var(--surf)}
 .tcat-colors{--tc1:#185FA5;--tc2:#534AB7;--tc3:#BA7517;--tc4:#1D9E75;--tc5:#D4537E;--tc6:#D85A30;--tc7:#639922;--tc8:#888780;--tc9:#B4B2A9}
 .tr-pie-wrap{padding:.55rem .65rem .5rem;border-top:1px solid var(--border)}
+.idea-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:.85rem 1rem;margin-bottom:.7rem;position:relative}
+.idea-card.done{opacity:.6}
+.idea-card.done .idea-topic{text-decoration:line-through}
+.idea-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:.55rem}
+.idea-check{width:20px;height:20px;border:1.5px solid var(--border);border-radius:5px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;margin-top:2px}
+.idea-check.checked{background:var(--acc);border-color:var(--acc)}
+.idea-check.checked::after{content:'✓';color:#fff;font-size:11px}
+.idea-topic{font-size:14px;font-weight:500;flex:1;line-height:1.4;color:var(--txt)}
+.idea-link{font-size:12px;color:#2471a3;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:3px}
+.idea-link:hover{text-decoration:underline}
+.idea-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 10px;font-size:11px;color:var(--txt2);margin-bottom:.5rem}
+.idea-meta-item{display:flex;gap:3px}
+.idea-meta-item .iml{color:var(--txt3);flex-shrink:0}
+.idea-body{font-size:12px;color:var(--txt2);background:var(--bg);border-radius:var(--rs);padding:.4rem .6rem;margin-bottom:.4rem;line-height:1.6}
+.idea-hook{font-size:12px;font-style:italic;color:#3d2fb0;background:#f0eeff;border-radius:var(--rs);padding:.35rem .6rem}
+.idea-actions{display:flex;gap:6px;margin-top:.6rem;flex-wrap:wrap}
+.idea-btn{font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:var(--rs);background:none;cursor:pointer;color:var(--txt2);font-family:inherit}
+.idea-btn.del{color:#c0392b}
+.idea-stats{display:flex;gap:8px;margin-bottom:.85rem}
+.idea-stat{background:var(--surf);border:1px solid var(--border);border-radius:var(--rs);padding:.4rem .7rem;font-size:11px;color:var(--txt2);text-align:center}
+.idea-stat b{color:var(--acc);font-size:14px;display:block;font-weight:500}
+.idea-empty{text-align:center;padding:2.5rem 1rem;color:var(--txt3);font-size:13px;line-height:2;border:1px dashed var(--border);border-radius:var(--r)}
+.idea-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+.ilbl{display:block;font-size:10px;color:var(--txt3);margin-bottom:2px;font-weight:500}
 .toast{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;font-size:12px;padding:7px 18px;border-radius:20px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;z-index:300}
 .toast.show{opacity:1}
 .brsub2{font-size:9px;color:var(--txt2);font-weight:500}
@@ -222,14 +247,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
 </head>
 <body>
 <div id="lock-overlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:16px">
-  <div style="font-family:'Gmarket Sans',sans-serif;font-size:26px;font-weight:700;color:var(--acc)">💸</div>
+  <div style="font-family:'Gmarket Sans',sans-serif;font-size:26px;font-weight:700;color:var(--acc)">💰 가계부</div>
   <div style="font-size:13px;color:var(--txt3);margin-bottom:4px">비밀번호를 입력하세요</div>
   <input id="lock-input" type="password" placeholder="비밀번호" style="width:200px;font-size:16px;padding:12px 16px;border:1px solid var(--border);border-radius:var(--r);background:var(--surf);color:var(--txt);text-align:center;outline:none;font-family:'Noto Sans KR',sans-serif" onkeydown="if(event.key==='Enter')tryUnlock()"/>
   <button onclick="tryUnlock()" style="width:200px;padding:12px;background:var(--acc);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-family:'Noto Sans KR',sans-serif;cursor:pointer">입력</button>
 </div>
 <div class="app-wrap">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-    <div class="app-title" style="margin-bottom:0">💸</div>
+    <div class="app-title" style="margin-bottom:0">💰 가계부</div>
     <button onclick="openPwSet()" style="background:none;border:1px solid var(--border);border-radius:var(--rs);padding:4px 10px;font-size:11px;color:var(--txt3);cursor:pointer;font-family:'Noto Sans KR',sans-serif">🔒 비번설정</button>
   </div>
 
@@ -381,6 +406,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
   </div>
 </div>
 
+  <div class="screen" id="sc-idea">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem">
+      <div style="font-family:'Gmarket Sans',sans-serif;font-size:18px;font-weight:700">💡 릴스 아이디어</div>
+      <button class="mbtn sm primary" onclick="openIdeaForm()">+ 추가</button>
+    </div>
+    <div class="idea-stats" id="idea-stats"></div>
+    <div id="idea-list"></div>
+  </div>
+</div>
+
 <div class="bottom-tabs">
   <button class="btab active" id="tab-ledger" onclick="sw('ledger')"><span class="btab-icon">📒</span>가계부</button>
   <button class="btab" id="tab-budget" onclick="sw('budget')"><span class="btab-icon">📋</span>예산</button>
@@ -388,6 +423,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
   <button class="btab" id="tab-goal" onclick="sw('goal')"><span class="btab-icon">🎯</span>목표</button>
   <button class="btab" id="tab-travel" onclick="sw('travel')"><span class="btab-icon">✈️</span>여행</button>
   <button class="btab" id="tab-shop" onclick="sw('shop')"><span class="btab-icon">🛍️</span>쇼핑결산</button>
+  <button class="btab" id="tab-idea" onclick="sw('idea')"><span class="btab-icon">💡</span>아이디어</button>
 </div>
 
 <div class="toast" id="toast">저장됨 ✓</div>
@@ -439,6 +475,7 @@ let S={
   shopItems:{},
   shopBudgets:{},
   monthlyBudgets:{},
+  ideas:[],
 };
 
 function persist(){
@@ -554,7 +591,7 @@ document.addEventListener('touchend',e=>{
 function sw(tab){
   activeTab=tab;
   closeDrawer();
-  ['ledger','budget','fixed','goal','travel','shop'].forEach(t=>{
+  ['ledger','budget','fixed','goal','travel','shop','idea'].forEach(t=>{
     document.getElementById('tab-'+t).classList.toggle('active',t===tab);
     document.getElementById('sc-'+t).classList.toggle('active',t===tab);
   });
@@ -572,7 +609,141 @@ function renderActive(){
   else if(activeTab==='goal')rG();
   else if(activeTab==='travel')rTravel();
   else if(activeTab==='shop')rShop();
+  else if(activeTab==='idea')rIdea();
 }
+
+/* ══ 아이디어 ══ */
+function rIdea(){
+  const items=S.ideas||[];
+  const done=items.filter(x=>x.done).length;
+  const stats=document.getElementById('idea-stats');
+  const list=document.getElementById('idea-list');
+  if(!stats||!list)return;
+  stats.innerHTML=
+    '<div class="idea-stat"><b>'+items.length+'</b>전체</div>'+
+    '<div class="idea-stat"><b>'+done+'</b>업로드 완료</div>'+
+    '<div class="idea-stat"><b>'+(items.length-done)+'</b>준비 중</div>';
+  list.innerHTML='';
+  if(!items.length){
+    list.innerHTML='<div class="idea-empty">아직 아이디어가 없어요.<br>+ 추가 버튼으로 릴스 아이디어를 기록해보세요 🎬</div>';
+    return;
+  }
+  [...items].reverse().forEach((idea,ri)=>{
+    const i=items.length-1-ri;
+    const card=document.createElement('div');
+    card.className='idea-card'+(idea.done?' done':'');
+    const metaItems=[
+      idea.item?'<div class="idea-meta-item"><span class="iml">아이템</span><span>'+idea.item+'</span></div>':'',
+      idea.shop?'<div class="idea-meta-item"><span class="iml">쇼핑몰</span><span>'+idea.shop+'</span></div>':'',
+      idea.shootDate?'<div class="idea-meta-item"><span class="iml">촬영예정</span><span>'+idea.shootDate+'</span></div>':'',
+      idea.uploadDate?'<div class="idea-meta-item"><span class="iml">업로드예정</span><span>'+idea.uploadDate+'</span></div>':'',
+    ].filter(Boolean).join('');
+    card.innerHTML=
+      '<div class="idea-top">'+
+        '<div class="idea-check'+(idea.done?' checked':'')+'" onclick="toggleIdeaDone('+i+')"></div>'+
+        '<div style="flex:1">'+
+          '<div class="idea-topic">'+idea.topic+'</div>'+
+          (idea.done&&idea.link?'<a class="idea-link" href="'+idea.link+'" target="_blank">🔗 릴스 보러가기</a>':'')+
+        '</div>'+
+      '</div>'+
+      (metaItems?'<div class="idea-meta">'+metaItems+'</div>':'')+
+      (idea.content?'<div class="idea-body">📝 '+idea.content+'</div>':'')+
+      (idea.hook?'<div class="idea-hook">🎣 "'+idea.hook+'"</div>':'')+
+      '<div class="idea-actions">'+
+        '<button class="idea-btn" onclick="openIdeaForm('+i+')">수정</button>'+
+        (!idea.done?'<button class="idea-btn" onclick="openIdeaLink('+i+')">링크 등록</button>':'')+
+        '<button class="idea-btn del" onclick="delIdea('+i+')">삭제</button>'+
+      '</div>';
+    list.appendChild(card);
+  });
+}
+
+function openIdeaForm(idx){
+  const isEdit=idx!==undefined;
+  const idea=isEdit?(S.ideas[idx]||{}):{};
+  cm();
+  const bd=document.createElement('div');bd.className='modal-backdrop';bd.id='mwrap';bd.onclick=e=>{if(e.target===bd)cm();};
+  const modal=document.createElement('div');modal.className='modal';modal.style.maxWidth='460px';
+  modal.innerHTML=
+    '<h3>'+(isEdit?'아이디어 수정':'릴스 아이디어 추가')+'</h3>'+
+    '<div class="idea-form">'+
+      '<label class="ilbl">주제 *</label>'+
+      '<input id="if-topic" placeholder="예: 따릉이 출근룩 Day 7" value="'+(idea.topic||'')+'"/>'+
+      '<div class="idea-form-grid">'+
+        '<div><label class="ilbl">아이템</label><input id="if-item" placeholder="예: 린넨 셋업" value="'+(idea.item||'')+'"/></div>'+
+        '<div><label class="ilbl">쇼핑몰</label><input id="if-shop" placeholder="예: Musinsa" value="'+(idea.shop||'')+'"/></div>'+
+      '</div>'+
+      '<label class="ilbl">내용</label>'+
+      '<textarea id="if-content" placeholder="릴스 내용 설명" style="height:64px;resize:none">'+(idea.content||'')+'</textarea>'+
+      '<label class="ilbl">훅 (첫 문장)</label>'+
+      '<input id="if-hook" placeholder="예: 이 가격에 이 퀄리티?" value="'+(idea.hook||'')+'"/>'+
+      '<div class="idea-form-grid">'+
+        '<div><label class="ilbl">예상 촬영일</label><input id="if-shoot" type="date" value="'+(idea.shootDate||'')+'"/></div>'+
+        '<div><label class="ilbl">예상 업로드일</label><input id="if-upload" type="date" value="'+(idea.uploadDate||'')+'"/></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="mfooter">'+
+      '<button class="mbtn" onclick="cm()">취소</button>'+
+      '<button class="mbtn primary" onclick="saveIdea('+(isEdit?idx:'undefined')+')">저장</button>'+
+    '</div>';
+  bd.appendChild(modal);document.getElementById('modal-area').appendChild(bd);am=bd;
+  setTimeout(()=>document.getElementById('if-topic')?.focus(),80);
+}
+
+function openIdeaLink(idx){
+  const idea=S.ideas[idx]||{};
+  cm();
+  const bd=document.createElement('div');bd.className='modal-backdrop';bd.id='mwrap';bd.onclick=e=>{if(e.target===bd)cm();};
+  const modal=document.createElement('div');modal.className='modal';
+  modal.innerHTML=
+    '<h3>업로드 완료 🎉</h3>'+
+    '<p style="font-size:13px;color:var(--txt2);margin-bottom:.85rem">릴스 링크를 입력하면 카드에서 바로 이동할 수 있어요.</p>'+
+    '<label class="ilbl">Instagram 릴스 링크</label>'+
+    '<input id="if-link" placeholder="https://www.instagram.com/reel/..." value="'+(idea.link||'')+'"/>'+
+    '<div class="mfooter">'+
+      '<button class="mbtn" onclick="cm()">취소</button>'+
+      '<button class="mbtn primary" onclick="markIdeaDone('+idx+')">완료 + 저장</button>'+
+    '</div>';
+  bd.appendChild(modal);document.getElementById('modal-area').appendChild(bd);am=bd;
+  setTimeout(()=>document.getElementById('if-link')?.focus(),80);
+}
+
+window.saveIdea=function(idx){
+  const topic=document.getElementById('if-topic')?.value.trim();
+  if(!topic)return;
+  const idea={
+    id:idx!==undefined&&idx!=='undefined'?(S.ideas[idx]||{}).id||Date.now():Date.now(),
+    topic,
+    item:document.getElementById('if-item')?.value.trim()||'',
+    shop:document.getElementById('if-shop')?.value.trim()||'',
+    content:document.getElementById('if-content')?.value.trim()||'',
+    hook:document.getElementById('if-hook')?.value.trim()||'',
+    shootDate:document.getElementById('if-shoot')?.value||'',
+    uploadDate:document.getElementById('if-upload')?.value||'',
+    done:idx!==undefined&&idx!=='undefined'?(S.ideas[idx]||{}).done||false:false,
+    link:idx!==undefined&&idx!=='undefined'?(S.ideas[idx]||{}).link||'':'',
+  };
+  if(!S.ideas)S.ideas=[];
+  if(idx!==undefined&&idx!=='undefined')S.ideas[idx]=idea;
+  else S.ideas.push(idea);
+  persist();cm();rIdea();
+};
+window.markIdeaDone=function(idx){
+  if(!S.ideas[idx])return;
+  S.ideas[idx].done=true;
+  S.ideas[idx].link=document.getElementById('if-link')?.value.trim()||'';
+  persist();cm();rIdea();
+};
+window.toggleIdeaDone=function(idx){
+  if(!S.ideas[idx])return;
+  if(S.ideas[idx].done){S.ideas[idx].done=false;persist();rIdea();}
+  else openIdeaLink(idx);
+};
+window.delIdea=function(idx){
+  S.ideas.splice(idx,1);persist();rIdea();
+};
+window.openIdeaForm=openIdeaForm;
+window.openIdeaLink=openIdeaLink;
 
 /* ══ 쇼핑 결산 ══ */
 const SHOP_EMOJIS=['👗','👔','👟','👜','🧥','👒','💍','🧣','👖','👠','🕶️','🧤','👝','🎒','🩴','🩱'];
@@ -585,7 +756,11 @@ function shMk(){return shcur.getFullYear()+'-'+String(shcur.getMonth()+1).padSta
 function rShop(){
   const m=shMk();
   const y=shcur.getFullYear(),mo=shcur.getMonth();
-  document.getElementById('sh-title').textContent=y+'년 '+SHOP_MONTHS[mo]+' 쇼핑 결산보고';
+  const titleEl=document.getElementById('sh-title');
+  const listEl=document.getElementById('sh-list');
+  const cntLbl=document.getElementById('sh-count-lbl');
+  if(!titleEl||!listEl)return;
+  titleEl.textContent=y+'년 '+SHOP_MONTHS[mo]+' 쇼핑 결산보고';
   const items=S.shopItems[m]||[];
   // 가계부에서 패션 카테고리 지출 합산
   let ledgerSpent=0;
@@ -593,8 +768,9 @@ function rShop(){
     const[ky,km]=k.split('-').map(Number);
     if(ky===y&&km===mo+1)evs.forEach(e=>{if(e.cat==='패션')ledgerSpent+=e.amt;});
   });
-  // 예산도 가계부 패션 예산에서
-  const budget=S.budgets['패션']||0;
+  const lMk=y+'-'+String(mo+1).padStart(2,'0');
+  const lBudgets2=S.monthlyBudgets[lMk]||S.budgets||{};
+  const budget=lBudgets2['패션']||S.budgets['패션']||0;
   const diff=budget-ledgerSpent;
   const pct=budget>0?Math.min(Math.round(ledgerSpent/budget*100),100):0;
   document.getElementById('sh-spent').textContent=fmt(ledgerSpent);
@@ -604,28 +780,31 @@ function rShop(){
   de.className='sc-val '+(budget?(diff<0?'red':'grn'):'');
   document.getElementById('sh-count').textContent=items.length+'개';
   document.getElementById('sh-pct').textContent=pct+'%';
-  document.getElementById('sh-count-lbl').textContent='아이템 '+items.length+'개';
+  if(cntLbl)cntLbl.textContent='아이템 '+items.length+'개';
   const f=document.getElementById('sh-fill');
-  f.style.width=Math.min(pct,100)+'%';
-  f.style.background=pct>100?'#c0392b':pct>80?'#e8940a':'#0f6e56';
-  const list=document.getElementById('sh-list');
+  if(f){f.style.width=Math.min(pct,100)+'%';f.style.background=pct>100?'#c0392b':pct>80?'#e8940a':'#0f6e56';}
+  // 리스트 렌더 (항상 실행)
+  listEl.innerHTML='';
   if(!items.length){
-    list.innerHTML='<div class="shop-empty">아직 등록된 아이템이 없어요.<br>+ 아이템 추가를 눌러 기록해보세요.</div>';
+    listEl.innerHTML='<div class="shop-empty">아직 등록된 아이템이 없어요.<br>+ 아이템 추가를 눌러 기록해보세요.</div>';
     return;
   }
-  list.innerHTML='';
   items.forEach((x,i)=>{
     const card=document.createElement('div');card.className='item-card';
     const thumbHtml=x.img
       ?'<div class="item-emoji" style="background:none;border:none;padding:0;overflow:hidden"><img src="'+x.img+'" alt="'+x.name+' 사진" style="width:52px;height:52px;object-fit:cover;border-radius:var(--rs);display:block"/></div>'
-      :'<div class="item-emoji">'+x.emoji+'</div>';
+      :'<div class="item-emoji">'+(x.emoji||'👗')+'</div>';
     card.innerHTML=thumbHtml
-      +'<div class="item-info"><div class="item-brand">'+x.brand+'</div>'
-      +'<div class="item-name">'+x.name+'</div>'
-      +'<div class="item-price">'+fmt(x.price)+'</div></div>';
+      +'<div class="item-info"><div class="item-brand">'+(x.brand||'')+'</div>'
+      +'<div class="item-name">'+(x.name||'')+'</div>'
+      +'<div class="item-price">'+fmt(x.price||0)+'</div></div>';
+    // 수정 버튼
+    const editBtn=document.createElement('button');editBtn.className='item-del2';editBtn.textContent='✏️';
+    editBtn.style.cssText='position:absolute;top:7px;right:32px;background:none;border:none;cursor:pointer;font-size:13px;';
+    editBtn.onclick=()=>openShEdit(m,i);
     const del=document.createElement('button');del.className='item-del2';del.textContent='×';
     del.onclick=()=>{S.shopItems[m].splice(i,1);persist();rShop();};
-    card.appendChild(del);list.appendChild(card);
+    card.appendChild(editBtn);card.appendChild(del);listEl.appendChild(card);
   });
 }
 
@@ -700,6 +879,66 @@ window.saveShBudget=function(){
   S.shopBudgets[shMk()]=v;persist();cm();rShop();
 };
 window.openShAdd=openShAdd;
+
+function openShEdit(m,idx){
+  const x=S.shopItems[m][idx];
+  if(!x)return;
+  let shImgDataEdit=x.img||'';
+  let shEmojiEdit=x.emoji||'👗';
+  cm();
+  const bd=document.createElement('div');bd.className='modal-backdrop';bd.id='mwrap';bd.onclick=e=>{if(e.target===bd)cm();};
+  const modal=document.createElement('div');modal.className='modal';
+  const h3=document.createElement('h3');h3.textContent='아이템 수정';modal.appendChild(h3);
+  // 사진
+  const imgLbl=document.createElement('div');imgLbl.className='slbl';imgLbl.textContent='사진';modal.appendChild(imgLbl);
+  const imgArea=document.createElement('div');
+  imgArea.style.cssText='width:100%;height:72px;border:1.5px dashed var(--border);border-radius:var(--rs);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--txt3);background:var(--bg);margin-bottom:.55rem;overflow:hidden;position:relative';
+  if(shImgDataEdit){
+    const im=document.createElement('img');im.src=shImgDataEdit;im.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0';
+    imgArea.appendChild(im);
+    const cl=document.createElement('span');cl.textContent='×';cl.style.cssText='position:absolute;top:3px;right:6px;font-size:16px;color:#fff;cursor:pointer;text-shadow:0 1px 3px rgba(0,0,0,.5);z-index:2';
+    cl.onclick=e=>{e.stopPropagation();shImgDataEdit='';imgArea.innerHTML='사진 추가';};
+    imgArea.appendChild(cl);
+  }else{imgArea.textContent='사진 추가';}
+  const fileInp=document.createElement('input');fileInp.type='file';fileInp.accept='image/*';fileInp.style.display='none';
+  fileInp.onchange=()=>{
+    const f=fileInp.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      shImgDataEdit=ev.target.result;imgArea.innerHTML='';
+      const im=document.createElement('img');im.src=shImgDataEdit;im.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0';imgArea.appendChild(im);
+      const cl=document.createElement('span');cl.textContent='×';cl.style.cssText='position:absolute;top:3px;right:6px;font-size:16px;color:#fff;cursor:pointer;text-shadow:0 1px 3px rgba(0,0,0,.5);z-index:2';
+      cl.onclick=e2=>{e2.stopPropagation();shImgDataEdit='';imgArea.innerHTML='사진 추가';};imgArea.appendChild(cl);
+    };r.readAsDataURL(f);
+  };
+  imgArea.onclick=()=>fileInp.click();
+  modal.appendChild(fileInp);modal.appendChild(imgArea);
+  // 이모지
+  const epLbl=document.createElement('div');epLbl.className='slbl';epLbl.textContent='아이콘';modal.appendChild(epLbl);
+  const epRow=document.createElement('div');epRow.className='emoji-pick';
+  SHOP_EMOJIS.forEach(em=>{
+    const b=document.createElement('button');b.className='epick'+(em===shEmojiEdit?' sel':'');
+    b.textContent=em;b.onclick=()=>{shEmojiEdit=em;document.querySelectorAll('.epick').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');};
+    epRow.appendChild(b);
+  });
+  modal.appendChild(epRow);
+  const brandInp=document.createElement('input');brandInp.type='text';brandInp.placeholder='브랜드';brandInp.value=x.brand||'';modal.appendChild(brandInp);
+  const nameInp=document.createElement('input');nameInp.type='text';nameInp.placeholder='아이템명';nameInp.value=x.name||'';modal.appendChild(nameInp);
+  const priceInp=document.createElement('input');priceInp.type='text';priceInp.placeholder='가격';priceInp.value=x.price?(x.price).toLocaleString():'';priceInp.setAttribute('inputmode','numeric');modal.appendChild(priceInp);
+  const footer=document.createElement('div');footer.className='mfooter';
+  const cb=document.createElement('button');cb.className='mbtn';cb.textContent='취소';cb.onclick=cm;
+  const sb=document.createElement('button');sb.className='mbtn primary';sb.textContent='저장';
+  sb.onclick=()=>{
+    const name=nameInp.value.trim();const price=parseCur(priceInp.value);
+    if(!name||!price)return;
+    S.shopItems[m][idx]={emoji:shEmojiEdit,brand:brandInp.value.trim()||'기타',name,price,img:shImgDataEdit};
+    persist();cm();rShop();
+  };
+  footer.appendChild(cb);footer.appendChild(sb);modal.appendChild(footer);
+  bd.appendChild(modal);document.getElementById('modal-area').appendChild(bd);am=bd;
+  setTimeout(()=>nameInp.focus(),80);
+}
+window.openShEdit=openShEdit;
 
 document.getElementById('shprev').onclick=()=>{
   if(shcur.getMonth()===0){shcur=new Date(shcur.getFullYear()-1,11,1);}
