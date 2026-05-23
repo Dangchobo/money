@@ -481,13 +481,15 @@ let S={
 function persist(){
   isSelfUpdate=true;
   clearTimeout(saveTimer);
+  // S의 현재 상태를 즉시 스냅샷으로 저장
+  const snapshot=JSON.stringify(S);
   saveTimer=setTimeout(async()=>{
     try{
-      await setDoc(DOC,{data:JSON.stringify(S)});
+      await setDoc(DOC,{data:snapshot});
       const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);
     }catch(e){console.error(e);}
-    finally{setTimeout(()=>{isSelfUpdate=false;},1000);}
-  },600);
+    finally{setTimeout(()=>{isSelfUpdate=false;},2000);}
+  },300);
 }
 
 let appUnlocked=false;
@@ -496,16 +498,18 @@ let savedPw='';
 let isSelfUpdate=false;
 onSnapshot(DOC,(snap)=>{
   if(snap.exists()){
-    try{
-      const d=JSON.parse(snap.data().data||'{}');
-      if(d&&typeof d==='object'){
-        if(d.appPassword)savedPw=d.appPassword;
-        Object.assign(S,d);
-      }
-    }catch(e){}
+    // 내가 저장한 직후면 Firebase 데이터로 S 덮어쓰기 완전 차단
+    if(!isSelfUpdate){
+      try{
+        const d=JSON.parse(snap.data().data||'{}');
+        if(d&&typeof d==='object'){
+          if(d.appPassword)savedPw=d.appPassword;
+          Object.assign(S,d);
+        }
+      }catch(e){}
+    }
   }
   if(!appUnlocked){showLock();return;}
-  // 모달 열려있거나 본인 저장 직후면 렌더 스킵
   if(am||isSelfUpdate)return;
   renderActive();
 });
