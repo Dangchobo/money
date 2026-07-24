@@ -433,7 +433,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
 
 <script type="module">
 import{initializeApp,getApps}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getFirestore,doc,setDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getFirestore,doc,getDoc,setDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // 가계부 Firebase
 const fbCfg={apiKey:"AIzaSyDIV9GRO-lyfJbe3EmJ4grhXQroATdJvPQ",authDomain:"money-e57ac.firebaseapp.com",projectId:"money-e57ac",storageBucket:"money-e57ac.firebasestorage.app",messagingSenderId:"501952540469",appId:"1:501952540469:web:1bedfad788f3862b35267c"};
@@ -447,6 +447,8 @@ const calFb=getApps().find(a=>a.name==='calapp')||initializeApp(calCfg,'calapp')
 const calDb=getFirestore(calFb);
 const CAL_DOC=doc(calDb,'calendar','main');
 let calEvents={};
+// 앱 시작: Firebase에서 1회 로드
+loadFromFirebase();
 
 const CC={약속:{bg:'#f0eeff',tx:'#3d2fb0',br:'#6c5ce7'},식사:{bg:'#fff8ee',tx:'#7a4d05',br:'#e8940a'},카페:{bg:'#edfaf4',tx:'#056b47',br:'#00b87a'},식재료:{bg:'#fff3e0',tx:'#7a4d05',br:'#f09020'},생필품:{bg:'#f1efe8',tx:'#5f5e5a',br:'#888780'},패션:{bg:'#fbeaf0',tx:'#72243e',br:'#d4537e'},미용:{bg:'#fbeaf0',tx:'#72243e',br:'#d4537e'},여가:{bg:'#e6f1fb',tx:'#0c447c',br:'#378add'},기타:{bg:'#f1efe8',tx:'#5f5e5a',br:'#888780'},병원:{bg:'#fcebeb',tx:'#791f1f',br:'#e24b4a'},선물:{bg:'#fbeaf0',tx:'#72243e',br:'#d4537e'},점심:{bg:'#fff8ee',tx:'#7a4d05',br:'#e8940a'},저녁:{bg:'#f0eeff',tx:'#3d2fb0',br:'#6c5ce7'}};
 const CATS=['약속','식사','카페','식재료','생필품','패션','미용','여가','기타','병원','선물'];
@@ -460,7 +462,7 @@ let lcur=new Date(today.getFullYear(),today.getMonth(),1);
 let bcur=new Date(today.getFullYear(),today.getMonth(),1);
 let fcur=new Date(today.getFullYear(),today.getMonth(),1);
 let gcurYear=today.getFullYear();
-let activeTab='ledger',bPT='lunch',saveTimer=null,am=null,assetVisible=true;
+let activeTab='ledger',bPT='lunch',am=null,assetVisible=true;
 let slideY=0,slideMo=0,slideD=1;
 
 let S={
@@ -478,41 +480,38 @@ let S={
   ideas:[],
 };
 
+// ── Firebase: 최초 1회만 로드, 이후 실시간 동기화 없음 ──
+let appUnlocked=false;
+let savedPw='';
+let saveTimer=null;
+let _saveQueue=null;
+
+async function loadFromFirebase(){
+  try{
+    const snap=await getDoc(DOC);
+    if(snap.exists()){
+      const d=JSON.parse(snap.data().data||'{}');
+      if(d&&typeof d==='object'){
+        if(d.appPassword)savedPw=d.appPassword;
+        Object.assign(S,d);
+      }
+    }
+  }catch(e){console.error('load error',e);}
+  showLock();
+}
+
 function persist(){
-  isSelfUpdate=true;
-  clearTimeout(saveTimer);
-  // S의 현재 상태를 즉시 스냅샷으로 저장
+  // S 현재 상태를 즉시 직렬화 (나중에 덮어씌워지지 않게)
   const snapshot=JSON.stringify(S);
+  clearTimeout(saveTimer);
   saveTimer=setTimeout(async()=>{
     try{
       await setDoc(DOC,{data:snapshot});
-      const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);
-    }catch(e){console.error(e);}
-    finally{setTimeout(()=>{isSelfUpdate=false;},2000);}
-  },300);
+      const t=document.getElementById('toast');
+      if(t){t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+    }catch(e){console.error('save error',e);}
+  },400);
 }
-
-let appUnlocked=false;
-let savedPw='';
-
-let isSelfUpdate=false;
-onSnapshot(DOC,(snap)=>{
-  if(snap.exists()){
-    // 내가 저장한 직후면 Firebase 데이터로 S 덮어쓰기 완전 차단
-    if(!isSelfUpdate){
-      try{
-        const d=JSON.parse(snap.data().data||'{}');
-        if(d&&typeof d==='object'){
-          if(d.appPassword)savedPw=d.appPassword;
-          Object.assign(S,d);
-        }
-      }catch(e){}
-    }
-  }
-  if(!appUnlocked){showLock();return;}
-  if(am||isSelfUpdate)return;
-  renderActive();
-});
 
 function showLock(){
   // 비번 없으면 바로 해제
