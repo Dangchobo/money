@@ -480,13 +480,42 @@ let S={
   ideas:[],
 };
 
-// ── Firebase: 최초 1회만 로드, 이후 실시간 동기화 없음 ──
+// ── 저장/로드 ──
+const LS_KEY='budget_backup_v1';
 let appUnlocked=false;
 let savedPw='';
 let saveTimer=null;
-let _saveQueue=null;
+
+// localStorage에 즉시 백업
+function saveLocal(snapshot){
+  try{localStorage.setItem(LS_KEY,snapshot);}catch(e){}
+}
+
+// Firebase에 저장 (딜레이 없음, 즉시)
+async function saveToFirebase(snapshot){
+  try{
+    await setDoc(DOC,{data:snapshot});
+    const t=document.getElementById('toast');
+    if(t){t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);}
+  }catch(e){
+    // Firebase 실패해도 localStorage에는 저장됨
+    const t=document.getElementById('toast');
+    if(t){t.textContent='로컬 저장됨';t.classList.add('show');setTimeout(()=>{t.classList.remove('show');t.textContent='저장됨 ✓';},2000);}
+  }
+}
+
+function persist(){
+  const snapshot=JSON.stringify(S);
+  // 1. 즉시 localStorage 백업
+  saveLocal(snapshot);
+  // 2. Firebase는 디바운스 (300ms) - 너무 자주 쓰지 않게
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>saveToFirebase(snapshot),300);
+}
 
 async function loadFromFirebase(){
+  let loaded=false;
+  // 1. Firebase에서 먼저 시도
   try{
     const snap=await getDoc(DOC);
     if(snap.exists()){
@@ -494,23 +523,28 @@ async function loadFromFirebase(){
       if(d&&typeof d==='object'){
         if(d.appPassword)savedPw=d.appPassword;
         Object.assign(S,d);
+        loaded=true;
+        // Firebase 성공하면 localStorage도 최신으로 동기화
+        saveLocal(JSON.stringify(S));
       }
     }
-  }catch(e){console.error('load error',e);}
-  showLock();
-}
-
-function persist(){
-  // S 현재 상태를 즉시 직렬화 (나중에 덮어씌워지지 않게)
-  const snapshot=JSON.stringify(S);
-  clearTimeout(saveTimer);
-  saveTimer=setTimeout(async()=>{
+  }catch(e){console.warn('Firebase 로드 실패, localStorage로 복구 시도');}
+  // 2. Firebase 실패 또는 데이터 없으면 localStorage에서 복구
+  if(!loaded){
     try{
-      await setDoc(DOC,{data:snapshot});
-      const t=document.getElementById('toast');
-      if(t){t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
-    }catch(e){console.error('save error',e);}
-  },400);
+      const local=localStorage.getItem(LS_KEY);
+      if(local){
+        const d=JSON.parse(local);
+        if(d&&typeof d==='object'){
+          if(d.appPassword)savedPw=d.appPassword;
+          Object.assign(S,d);
+          // 복구된 데이터를 Firebase에 다시 저장
+          saveToFirebase(local);
+        }
+      }
+    }catch(e){console.warn('localStorage 복구도 실패');}
+  }
+  showLock();
 }
 
 function showLock(){
