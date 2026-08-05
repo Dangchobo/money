@@ -522,29 +522,12 @@ function loadFromLocal(){
 }
 
 async function syncFirebase(){
-  // Firebase 백그라운드 동기화 (실패해도 앱에 영향 없음)
+  // Firebase에 현재 S 데이터 업로드만 함 (덮어쓰기 절대 안 함)
   try{
-    const snap=await getDoc(DOC);
-    if(snap.exists()){
-      const fbData=JSON.parse(snap.data().data||'{}');
-      if(fbData&&typeof fbData==='object'){
-        // Firebase와 localStorage 중 더 최신 데이터 사용
-        // (expenses 키 개수로 판단)
-        const fbCount=Object.keys(fbData.expenses||{}).length;
-        const localCount=Object.keys(S.expenses||{}).length;
-        if(fbCount>=localCount){
-          if(fbData.appPassword)savedPw=fbData.appPassword;
-          Object.assign(S,fbData);
-          saveLocal(JSON.stringify(S));
-          if(appUnlocked)renderActive();
-        } else {
-          // localStorage가 더 최신이면 Firebase에 업로드
-          saveToFirebase(JSON.stringify(S));
-        }
-      }
-    }
+    const snapshot=JSON.stringify(S);
+    await saveToFirebase(snapshot);
   }catch(e){
-    console.warn('Firebase 동기화 실패 - localStorage로 계속 사용');
+    console.warn('Firebase 업로드 실패 - localStorage로 계속 사용');
   }
 }
 
