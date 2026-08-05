@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -597,13 +598,12 @@ function showToast2(msg){
   t.classList.add('show');setTimeout(()=>{t.classList.remove('show');t.textContent=old;},1800);
 }
 
-// 캘린더 약속 실시간 동기화 (읽기 전용)
-onSnapshot(CAL_DOC,(snap)=>{
+// 캘린더 약속 1회 로드 (실시간 연결 제거 - 에러 방지)
+getDoc(CAL_DOC).then(snap=>{
   if(snap.exists()){
     try{calEvents=JSON.parse(snap.data().data||'{}');}catch(e){calEvents={};}
-  } else {calEvents={};}
-  if(activeTab==='budget')rB();
-});
+  }
+}).catch(()=>{calEvents={};});
 
 function dkey(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
 function fmt(n){return '₩'+Math.round(n).toLocaleString()}
