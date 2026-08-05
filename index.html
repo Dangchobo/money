@@ -433,7 +433,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
 
 <script type="module">
 import{initializeApp,getApps}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getFirestore,doc,getDoc,setDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getFirestore,doc,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // 가계부 Firebase
 const fbCfg={apiKey:"AIzaSyDIV9GRO-lyfJbe3EmJ4grhXQroATdJvPQ",authDomain:"money-e57ac.firebaseapp.com",projectId:"money-e57ac",storageBucket:"money-e57ac.firebasestorage.app",messagingSenderId:"501952540469",appId:"1:501952540469:web:1bedfad788f3862b35267c"};
@@ -441,11 +441,7 @@ const fb=getApps().find(a=>a.name==='bapp')||initializeApp(fbCfg,'bapp');
 const db=getFirestore(fb);
 const DOC=doc(db,'budget','main');
 
-// 캘린더 Firebase (약속 읽기 전용)
-const calCfg={apiKey:"AIzaSyB2mfo0KnilUaOuGjQVhg2fMtppnINOyks",authDomain:"calendar-dcca0.firebaseapp.com",projectId:"calendar-dcca0",storageBucket:"calendar-dcca0.firebasestorage.app",messagingSenderId:"825274041321",appId:"1:825274041321:web:f24cb4482f768b25e84178"};
-const calFb=getApps().find(a=>a.name==='calapp')||initializeApp(calCfg,'calapp');
-const calDb=getFirestore(calFb);
-const CAL_DOC=doc(calDb,'calendar','main');
+// 캘린더 연동 비활성화 (Firebase 연결 에러 방지)
 let calEvents={};
 
 const CC={약속:{bg:'#f0eeff',tx:'#3d2fb0',br:'#6c5ce7'},식사:{bg:'#fff8ee',tx:'#7a4d05',br:'#e8940a'},카페:{bg:'#edfaf4',tx:'#056b47',br:'#00b87a'},식재료:{bg:'#fff3e0',tx:'#7a4d05',br:'#f09020'},생필품:{bg:'#f1efe8',tx:'#5f5e5a',br:'#888780'},패션:{bg:'#fbeaf0',tx:'#72243e',br:'#d4537e'},미용:{bg:'#fbeaf0',tx:'#72243e',br:'#d4537e'},여가:{bg:'#e6f1fb',tx:'#0c447c',br:'#378add'},기타:{bg:'#f1efe8',tx:'#5f5e5a',br:'#888780'},병원:{bg:'#fcebeb',tx:'#791f1f',br:'#e24b4a'},선물:{bg:'#fbeaf0',tx:'#72243e',br:'#d4537e'},점심:{bg:'#fff8ee',tx:'#7a4d05',br:'#e8940a'},저녁:{bg:'#f0eeff',tx:'#3d2fb0',br:'#6c5ce7'}};
@@ -598,12 +594,7 @@ function showToast2(msg){
   t.classList.add('show');setTimeout(()=>{t.classList.remove('show');t.textContent=old;},1800);
 }
 
-// 캘린더 약속 1회 로드 (실시간 연결 제거 - 에러 방지)
-getDoc(CAL_DOC).then(snap=>{
-  if(snap.exists()){
-    try{calEvents=JSON.parse(snap.data().data||'{}');}catch(e){calEvents={};}
-  }
-}).catch(()=>{calEvents={};});
+// 캘린더 연동 비활성화
 
 function dkey(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
 function fmt(n){return '₩'+Math.round(n).toLocaleString()}
