@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -512,8 +511,22 @@ function persist(){
 }
 
 async function loadFromFirebase(){
-  let loaded=false;
-  // 1. Firebase에서 먼저 시도
+  // 1. localStorage 먼저 즉시 로드 (항상)
+  try{
+    const local=localStorage.getItem(LS_KEY);
+    if(local){
+      const d=JSON.parse(local);
+      if(d&&typeof d==='object'){
+        if(d.appPassword)savedPw=d.appPassword;
+        Object.assign(S,d);
+      }
+    }
+  }catch(e){console.warn('localStorage 로드 실패');}
+
+  // 화면 먼저 표시 (localStorage 데이터로)
+  showLock();
+
+  // 2. Firebase는 백그라운드에서 시도 (성공하면 더 최신 데이터로 업데이트)
   try{
     const snap=await getDoc(DOC);
     if(snap.exists()){
@@ -521,28 +534,16 @@ async function loadFromFirebase(){
       if(d&&typeof d==='object'){
         if(d.appPassword)savedPw=d.appPassword;
         Object.assign(S,d);
-        loaded=true;
-        // Firebase 성공하면 localStorage도 최신으로 동기화
+        // Firebase 데이터가 더 최신이면 localStorage도 업데이트
         saveLocal(JSON.stringify(S));
+        // 화면 갱신
+        if(appUnlocked)renderActive();
       }
     }
-  }catch(e){console.warn('Firebase 로드 실패, localStorage로 복구 시도');}
-  // 2. Firebase 실패 또는 데이터 없으면 localStorage에서 복구
-  if(!loaded){
-    try{
-      const local=localStorage.getItem(LS_KEY);
-      if(local){
-        const d=JSON.parse(local);
-        if(d&&typeof d==='object'){
-          if(d.appPassword)savedPw=d.appPassword;
-          Object.assign(S,d);
-          // 복구된 데이터를 Firebase에 다시 저장
-          saveToFirebase(local);
-        }
-      }
-    }catch(e){console.warn('localStorage 복구도 실패');}
+  }catch(e){
+    console.warn('Firebase 로드 실패 - localStorage 데이터로 계속 사용');
+    // Firebase 실패해도 이미 localStorage로 뜨고 있으니 괜찮음
   }
-  showLock();
 }
 
 function showLock(){
