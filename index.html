@@ -447,8 +447,6 @@ const calFb=getApps().find(a=>a.name==='calapp')||initializeApp(calCfg,'calapp')
 const calDb=getFirestore(calFb);
 const CAL_DOC=doc(calDb,'calendar','main');
 let calEvents={};
-// 앱 시작: Firebase에서 1회 로드
-loadFromFirebase();
 
 const CC={약속:{bg:'#f0eeff',tx:'#3d2fb0',br:'#6c5ce7'},식사:{bg:'#fff8ee',tx:'#7a4d05',br:'#e8940a'},카페:{bg:'#edfaf4',tx:'#056b47',br:'#00b87a'},식재료:{bg:'#fff3e0',tx:'#7a4d05',br:'#f09020'},생필품:{bg:'#f1efe8',tx:'#5f5e5a',br:'#888780'},패션:{bg:'#fbeaf0',tx:'#72243e',br:'#d4537e'},미용:{bg:'#fbeaf0',tx:'#72243e',br:'#d4537e'},여가:{bg:'#e6f1fb',tx:'#0c447c',br:'#378add'},기타:{bg:'#f1efe8',tx:'#5f5e5a',br:'#888780'},병원:{bg:'#fcebeb',tx:'#791f1f',br:'#e24b4a'},선물:{bg:'#fbeaf0',tx:'#72243e',br:'#d4537e'},점심:{bg:'#fff8ee',tx:'#7a4d05',br:'#e8940a'},저녁:{bg:'#f0eeff',tx:'#3d2fb0',br:'#6c5ce7'}};
 const CATS=['약속','식사','카페','식재료','생필품','패션','미용','여가','기타','병원','선물'];
@@ -1743,6 +1741,9 @@ document.getElementById('fprev').onclick=()=>{fcur=new Date(fcur.getFullYear(),f
 document.getElementById('fnext').onclick=()=>{fcur=new Date(fcur.getFullYear(),fcur.getMonth()+1,1);rF();};
 document.getElementById('gprev').onclick=()=>{gcurYear--;rG();};
 document.getElementById('gnext').onclick=()=>{gcurYear++;rG();};
+
+// 앱 시작 (함수 정의 이후에 호출)
+loadFromFirebase();
 </script>
 </body>
 </html>
