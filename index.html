@@ -482,7 +482,7 @@ let saveTimer=null;
 
 // localStorage에 즉시 백업
 function saveLocal(snapshot){
-  try{localStorage.setItem(LS_KEY,snapshot);}catch(e){}
+  try{localStorage.setItem(LS_KEY,snapshot);}catch(e){console.warn('로컬 저장 실패',e);const t=document.getElementById('toast');if(t){t.textContent='⚠️ 저장 실패! 새로고침하면 방금 입력한 내용이 사라질 수 있어요';t.style.background='#c0392b';t.classList.add('show');setTimeout(()=>{t.classList.remove('show');t.textContent='저장됨 ✓';t.style.background='';},4000);}else{alert('저장 실패: 이 브라우저에 데이터가 저장되지 않았습니다. 새로고침하면 방금 입력한 내용이 사라질 수 있습니다.');}}
 }
 
 // Firebase에 저장 (딜레이 없음, 즉시)
@@ -521,7 +521,7 @@ function loadFromLocal(){
   }catch(e){}
 }
 
-async function syncFirebase(){
+async function restoreFromFirebase(){try{const snap=await getDoc(DOC);if(snap.exists()){const data=snap.data();if(data&&data.data){const d=JSON.parse(data.data);if(d&&typeof d==='object'){if(d.appPassword)savedPw=d.appPassword;Object.assign(S,d);saveLocal(data.data);}}}}catch(e){console.warn('Firebase 복원 실패',e);}} async function syncFirebase(){
   // Firebase에 현재 S 데이터 업로드만 함 (덮어쓰기 절대 안 함)
   try{
     const snapshot=JSON.stringify(S);
@@ -536,7 +536,7 @@ async function loadFromFirebase(){
   loadFromLocal();
   showLock();
   // 2. Firebase 백그라운드 동기화
-  syncFirebase();
+  if(!localStorage.getItem(LS_KEY)){await restoreFromFirebase();renderActive();} syncFirebase();
 }
 
 function showLock(){
