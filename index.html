@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -510,8 +511,8 @@ function persist(){
   saveTimer=setTimeout(()=>saveToFirebase(snapshot),300);
 }
 
-async function loadFromFirebase(){
-  // 1. localStorage 먼저 즉시 로드 (항상)
+function loadFromLocal(){
+  // localStorage에서 즉시 동기 로드
   try{
     const local=localStorage.getItem(LS_KEY);
     if(local){
@@ -521,29 +522,42 @@ async function loadFromFirebase(){
         Object.assign(S,d);
       }
     }
-  }catch(e){console.warn('localStorage 로드 실패');}
+  }catch(e){}
+}
 
-  // 화면 먼저 표시 (localStorage 데이터로)
-  showLock();
-
-  // 2. Firebase는 백그라운드에서 시도 (성공하면 더 최신 데이터로 업데이트)
+async function syncFirebase(){
+  // Firebase 백그라운드 동기화 (실패해도 앱에 영향 없음)
   try{
     const snap=await getDoc(DOC);
     if(snap.exists()){
-      const d=JSON.parse(snap.data().data||'{}');
-      if(d&&typeof d==='object'){
-        if(d.appPassword)savedPw=d.appPassword;
-        Object.assign(S,d);
-        // Firebase 데이터가 더 최신이면 localStorage도 업데이트
-        saveLocal(JSON.stringify(S));
-        // 화면 갱신
-        if(appUnlocked)renderActive();
+      const fbData=JSON.parse(snap.data().data||'{}');
+      if(fbData&&typeof fbData==='object'){
+        // Firebase와 localStorage 중 더 최신 데이터 사용
+        // (expenses 키 개수로 판단)
+        const fbCount=Object.keys(fbData.expenses||{}).length;
+        const localCount=Object.keys(S.expenses||{}).length;
+        if(fbCount>=localCount){
+          if(fbData.appPassword)savedPw=fbData.appPassword;
+          Object.assign(S,fbData);
+          saveLocal(JSON.stringify(S));
+          if(appUnlocked)renderActive();
+        } else {
+          // localStorage가 더 최신이면 Firebase에 업로드
+          saveToFirebase(JSON.stringify(S));
+        }
       }
     }
   }catch(e){
-    console.warn('Firebase 로드 실패 - localStorage 데이터로 계속 사용');
-    // Firebase 실패해도 이미 localStorage로 뜨고 있으니 괜찮음
+    console.warn('Firebase 동기화 실패 - localStorage로 계속 사용');
   }
+}
+
+async function loadFromFirebase(){
+  // 1. localStorage 즉시 로드 → 화면 표시
+  loadFromLocal();
+  showLock();
+  // 2. Firebase 백그라운드 동기화
+  syncFirebase();
 }
 
 function showLock(){
